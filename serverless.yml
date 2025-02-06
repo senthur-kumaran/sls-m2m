@@ -1,0 +1,66 @@
+service: sls-m2m
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: dev
+  environment:
+    REGION: ${self:provider.region}
+    COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+
+resources:
+  Resources:
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: sls-m2m
+
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: sls-m2m
+        UserPoolId:
+          Ref: CognitoUserPool
+
+    CognitoResourceServer:
+      Type: AWS::Cognito::UserPoolResourceServer
+      Properties:
+        Identifier: myapi
+        Name: My API Resource Server
+        UserPoolId:
+          Ref: CognitoUserPool
+        Scopes:
+          - ScopeName: read
+            ScopeDescription: Read access to My API
+          - ScopeName: write
+            ScopeDescription: Write access to My API
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      DependsOn: CognitoResourceServer 
+      Properties:
+        ClientName: MyClient
+        UserPoolId:
+          Ref: CognitoUserPool
+        GenerateSecret: true
+        AllowedOAuthFlows:
+          - client_credentials
+        AllowedOAuthScopes:
+          - myapi/read
+          - myapi/write
+        AllowedOAuthFlowsUserPoolClient: true
+
+functions:
+  securedFunction:
+    handler: handler.securedHandler
+    events:
+      - http:
+          path: /
+          method: get
+          authorizer:
+            name: tokenAuthorizer
+            type: request
+
+  tokenAuthorizer:
+    handler: authorizer.tokenAuthorizer

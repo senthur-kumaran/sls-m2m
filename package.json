@@ -1,0 +1,11 @@
+{
+  "name": "sls-m2m",
+  "version": "1.0.0",
+  "description": "Serverless application for M2M authentication using AWS Cognito and Lambda. Implements Client Credentials OAuth flow with a custom JWT authorizer for securing API access.",
+  "main": "handler.js",
+  "license": "ISC",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0"
+  }
+}
